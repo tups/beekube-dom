@@ -120,7 +120,7 @@ function reccursiveAssignVariables(template, templateRender, context, elementPar
                 setVariableOnComponent(
                     element,
                     context
-                 )
+                )
             }
 
             // On boucle sur les élements DOM
@@ -186,9 +186,9 @@ const SET_VARIABLE_DOM = 2;
  * @param context
  */
 function setVariableOnComponent(component, context) {
-   if (component !== null) {
-       component.props = Object.assign({}, context.variables);
-   }
+    if (component !== null) {
+        component.props = Object.assign({}, context.variables);
+    }
 
 }
 
@@ -260,19 +260,22 @@ DOMModule.prototype.render = function (context = null) {
 
 };
 
+function deleteReccursiveDOM(DOM) {
+    if(Array.isArray(DOM)) {
+        DOM.forEach(function (element) {
+            for(let name in element) {
+                if(element[name].hasOwnProperty('DOM')) {
+                    element[name].DOM.remove();
+                }
+            }
+        });
+    }
+}
+
 DOMModule.prototype.deleteDOM = function () {
     if (this.DOMElement.DOM !== null) {
         this.DOMElement.removeEvent();
-        switch (typeof this.DOMElement.DOM) {
-            case 'object':
-                this.DOMElement.DOM.remove();
-                break;
-            case 'array':
-                this.DOMElement.DOM.forEach(function (DOMElement) {
-                    DOMElement.remove();
-                });
-                break;
-        }
+        deleteReccursiveDOM(this.DOMElement.DOM);
     }
 };
 

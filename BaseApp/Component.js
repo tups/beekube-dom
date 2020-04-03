@@ -69,6 +69,12 @@ class Component {
         return [];
     }
 
+    destroy () {
+        if(!!this.DOMModule) {
+            this.DOMModule.deleteDOM();
+        }
+    }
+
 }
 
 export default Component;

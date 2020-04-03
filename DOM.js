@@ -34,8 +34,9 @@ import {getContentVariable} from "./Helper/String";
         }]
  *
  */
-function CreateElementDOM(dataJson, parentElement) {
+function CreateElementDOM(dataJson, parentElement, type) {
     parentElement = typeof parentElement === "undefined" ? null : parentElement;
+    type = typeof type === "undefined" ? null : type;
 
     this.event = [];
     this.DOM = [];
@@ -52,7 +53,25 @@ function CreateElementDOM(dataJson, parentElement) {
 
         for (let typeElement in element) {
             if (element.hasOwnProperty(typeElement)) {
-                let elem = document.createElement(typeElement);
+                let thisType = 'html';
+
+                if(type === 'svg') {
+                    thisType = type
+                } else {
+                    if(typeElement === 'svg') {
+                        thisType = typeElement;
+                        type = typeElement
+                    } else {
+                        thisType = 'html';
+                    }
+                }
+                let elem;
+                if(thisType === 'svg') {
+                    elem = document. createElementNS("http://www.w3.org/2000/svg", typeElement);
+                } else {
+                    elem = document.createElement(typeElement);
+                }
+
 
                 thisDOM[typeElement] = {
                     'DOM': elem
@@ -63,11 +82,9 @@ function CreateElementDOM(dataJson, parentElement) {
                     if (elemJSON.hasOwnProperty(attribute)) {
                         switch (attribute) {
                             case 'children':
-                                let children = new CreateElementDOM(elemJSON[attribute], elem);
+                                let children = new CreateElementDOM(elemJSON[attribute], elem, type);
                                 _this.event.concat(children.event);
-                                thisDOM[typeElement] = {
-                                    'children': children.DOM
-                                };
+                                thisDOM[typeElement]['children'] = children.DOM;
                                 break;
                             case 'textContent':
                                 elem.textContent = getContentVariable(elemJSON[attribute]);
