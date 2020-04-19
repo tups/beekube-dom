@@ -60,7 +60,6 @@ function CreateElementDOM(dataJson, parentElement, type) {
                 } else {
                     if(typeElement === 'svg') {
                         thisType = typeElement;
-                        type = typeElement
                     } else {
                         thisType = 'html';
                     }
@@ -82,7 +81,7 @@ function CreateElementDOM(dataJson, parentElement, type) {
                     if (elemJSON.hasOwnProperty(attribute)) {
                         switch (attribute) {
                             case 'children':
-                                let children = new CreateElementDOM(elemJSON[attribute], elem, type);
+                                let children = new CreateElementDOM(elemJSON[attribute], elem, thisType);
                                 _this.event.concat(children.event);
                                 thisDOM[typeElement]['children'] = children.DOM;
                                 break;
