@@ -89,6 +89,20 @@ function CreateElementDOM(dataJson, parentElement, type) {
                             case 'textContent':
                                 elem.textContent = getContentVariable(elemJSON[attribute]);
                                 break;
+                            case 'innerHTML':
+                                elem.innerHTML = elemJSON[attribute];
+                                break;
+                            case 'class':
+                                if(typeof elemJSON[attribute] === "object") {
+                                    for (let thisClass in elemJSON[attribute]) {
+                                        if(!!elemJSON[attribute][thisClass]) {
+                                            elem.classList.add(elemJSON[attribute][thisClass]);
+                                        }
+                                    }
+                                } else {
+                                    elem.classList.add(elemJSON[attribute]);
+                                }
+                                break;
                             default:
                                 _this.event.concat(
                                     setAttribute(elem, attribute, elemJSON[attribute])

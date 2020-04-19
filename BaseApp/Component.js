@@ -70,9 +70,13 @@ class Component {
     }
 
     destroy () {
+
+        // Remove All DOM
         if(!!this.DOMModule) {
             this.DOMModule.deleteDOM();
         }
+        // Remove current Component
+        delete this;
     }
 
 }
