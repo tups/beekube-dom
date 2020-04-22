@@ -1,6 +1,8 @@
 import CreateElementDOM from '../DOM';
 import {cloneObject} from '../Helper/Object';
 import {getContentVariable} from "../Helper/String";
+import {Difference} from "js-struct-compare";
+import Component from "./Component";
 
 /**
  * Permet de générer du DOM HTML à partir d'une template JSON
@@ -160,7 +162,7 @@ function reccursiveAssignVariables(template, templateRender, context, elementPar
                                     break;
                                 default:
                                     newTemplate[elementName][attributeRender] = setVariable(
-                                        element === null ? element : element.DOM,
+                                        !element ? element : element.DOM,
                                         attributeRender,
                                         attributeTemplate,
                                         variableNames,
@@ -214,7 +216,7 @@ function setVariable(element, attributeName, attributeValue, variablesName, cont
             let variableValue = '';
             // On vérifie si la valeur est une function
             // Si oui, on l'execute
-            switch(typeof context.variables[nameVariable]) {
+            switch (typeof context.variables[nameVariable]) {
                 case 'function':
                     variableValue = context.variables[nameVariable]();
                     break;
@@ -237,7 +239,7 @@ function setVariable(element, attributeName, attributeValue, variablesName, cont
                 break;
             default:
                 element.setAttribute(attributeName, value);
-                if (element.hasAttribute(attributeName)) {
+                if (element.hasAttribute(attributeName) && typeof element.hasAttribute(attributeName) === 'string') {
                     element[attributeName] = value;
                 }
                 break;
@@ -250,9 +252,16 @@ function setVariable(element, attributeName, attributeValue, variablesName, cont
 /**
  * Rendu de la template
  * @param context
+ * @param templateCompare Difference[]
  */
-DOMModule.prototype.render = function (context = null) {
+DOMModule.prototype.render = function (context = null, templateCompare = []) {
     context = context === null ? this : context;
+
+    if (templateCompare.length) {
+        updateTemplate(context, templateCompare);
+        this.getTemplateVariables(); // Mise à jour des données sur les variables
+    }
+
     let templateWithVariables = assignVariableTemplate(context);
     if (context.DOMElement === null) {
         context.DOMElement = new CreateElementDOM(templateWithVariables, context.parentNode);
@@ -260,11 +269,232 @@ DOMModule.prototype.render = function (context = null) {
 
 };
 
+/**
+ *
+ * @param context
+ * @param diffenrenceList Difference[]
+ */
+function updateTemplate(context, diffenrenceList) {
+
+    for (let diff in diffenrenceList) {
+        if (diffenrenceList.hasOwnProperty(diff) && diffenrenceList[diff] instanceof Difference) {
+            editTemplate(context, diffenrenceList[diff]);
+        }
+    }
+}
+
+function editTemplate(context, diff) {
+    updateValue(context, diff.get_path(), diff.get_right_value(), diff.get_left_value(), diff.get_type());
+}
+
+const TYPE_NODELIST = 1;
+const TYPE_ELEMENT = 2;
+const TYPE_ATTRIBUTE = 3;
+const TYPE_ATTRIBUTE_LIST = 4;
+const TYPE_COMPONENT = 5;
+
+function incrementeType(type, key) {
+    switch (type) {
+        case TYPE_NODELIST:
+            return TYPE_ELEMENT;
+        case TYPE_ELEMENT:
+            return TYPE_ATTRIBUTE;
+        case TYPE_ATTRIBUTE:
+            if (key === 'children') {
+                return TYPE_NODELIST;
+            } else {
+                return TYPE_ATTRIBUTE_LIST
+            }
+        case TYPE_ATTRIBUTE_LIST:
+            return TYPE_ATTRIBUTE_LIST;
+    }
+    return TYPE_NODELIST;
+}
+
+function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element) {
+    let elementDOM = element.DOM;
+
+    const REMOVE_OLD = typeDiff === Difference.TYPE_DELETED || typeDiff === Difference.TYPE_CHANGED;
+    const ADD_NEW = typeDiff === Difference.TYPE_ADDED || typeDiff === Difference.TYPE_CHANGED;
+
+    switch (typeIndex) {
+        case TYPE_NODELIST:
+            if (REMOVE_OLD) {
+                if (Array.isArray(element[name])) {
+                    element[name].forEach(function (child) {
+                        // Suppression Ancienne éléments
+                        if (child instanceof CreateElementDOM) {
+                            child.destroy();
+                        } else {
+                            if (child.hasOwnProperty('DOM')) {
+                                child.DOM.remove();
+                            }
+                        }
+                    });
+
+                    element[name] = [];
+                }
+            }
+
+            // Création du nouvelle élément
+            if (ADD_NEW) {
+                element[name] = new CreateElementDOM(value, elementDOM);
+            }
+
+            break;
+
+        case TYPE_ELEMENT:
+            // sécurité sur la clé children
+            if (!element.hasOwnProperty('children')) element['children'] = [];
+
+            // Suppression de l'ancien élément
+            if (REMOVE_OLD) {
+                // Suppression Ancienne éléments
+                if (element['children'][name] instanceof CreateElementDOM) {
+                    if(element['children'][name].hasOwnProperty('DOM')) {
+                        element['children'][name].DOM.forEach(function (child) {
+                            if (child instanceof Component) {
+                                child.destroy();
+                            } else {
+                                for(let elementName in child) {
+                                    if(child.hasOwnProperty(elementName) && child[elementName].hasOwnProperty('DOM')) {
+                                        child[elementName].DOM.remove();
+                                    }
+                                }
+
+                            }
+                        });
+                    }
+
+                } else {
+                    if (element['children'][name].hasOwnProperty('DOM')) {
+                        element['children'][name].DOM.remove();
+                    }
+                }
+            }
+
+            // Création du nouvelle élément
+            if (ADD_NEW) {
+                element['children'][name] = new CreateElementDOM([value], elementDOM);
+            }
+
+            break;
+        case TYPE_ATTRIBUTE:
+            switch (name) {
+                case 'children':
+                    break;
+                default:
+                    switch (name) {
+                        case 'class':
+                            if (REMOVE_OLD) {
+                                elementDOM.classList.remove(oldValue);
+                            }
+                            if (ADD_NEW) {
+                                elementDOM.classList.add(value);
+                            }
+                            break;
+                        case 'textContent':
+                            if (REMOVE_OLD) {
+                                elementDOM.textContent = '';
+                            }
+                            if (ADD_NEW) {
+                                elementDOM.textContent = value;
+                            }
+                            break;
+                        case 'innerHTML':
+                            if (REMOVE_OLD) {
+                                elementDOM.innerHTML = '';
+                            }
+                            if (ADD_NEW) {
+                                elementDOM.innerHTML = value;
+                            }
+                            break;
+                        default:
+                            if (REMOVE_OLD) {
+                                elementDOM.removeAttribute(name);
+                            }
+                            if (ADD_NEW) {
+                                elementDOM.setAttribute(name, value);
+                            }
+                            break;
+                    }
+                    break;
+            }
+            break;
+        case TYPE_ATTRIBUTE_LIST:
+            switch (name) {
+                case 'class':
+                    if (REMOVE_OLD) {
+                        elementDOM.classList.remove(oldValue);
+                    }
+                    if (ADD_NEW) {
+                        elementDOM.classList.add(value);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            break;
+    }
+
+}
+
+
+function updateValue(context, paths, right_value, left_value, typeDiff) {
+    let current = context.template, i,
+        last = false,
+        lastPath = null,
+        currentDOM = context.DOMElement.DOM,
+        typeIndex = TYPE_NODELIST,
+        currentElement = null;
+
+    for (i = 0; i < paths.length; ++i) {
+        last = (i + 1) === paths.length;
+        typeIndex = incrementeType(typeIndex, paths[i]);
+
+        if (current[paths[i]] === undefined) {
+            if (typeDiff === Difference.TYPE_DELETED) {
+                return false;
+            } else {
+                updateValueInDOM(left_value, right_value, typeDiff, (typeIndex === TYPE_ATTRIBUTE_LIST ? lastPath : paths[i]), typeIndex, currentElement);
+                current[paths[i]] = right_value;
+            }
+
+
+        } else {
+            current = current[paths[i]];
+
+            if (currentDOM.hasOwnProperty(paths[i])) {
+                currentDOM = currentDOM[paths[i]]
+            }
+
+            if (typeIndex === TYPE_ATTRIBUTE) {
+                currentElement = currentDOM;
+            }
+
+            if (last) {
+                if (typeDiff === Difference.TYPE_DELETED) {
+                    updateValueInDOM(left_value, right_value, typeDiff, (typeIndex === TYPE_ATTRIBUTE_LIST ? lastPath : paths[i]), typeIndex, currentElement);
+                } else {
+                    updateValueInDOM(left_value, right_value, typeDiff, (typeIndex === TYPE_ATTRIBUTE_LIST ? lastPath : paths[i]), typeIndex, currentElement);
+                    if(typeIndex !== TYPE_ATTRIBUTE_LIST) {
+                        current[paths[i]] = right_value;
+                    }
+                }
+            }
+        }
+
+        lastPath = paths[i];
+    }
+    return current;
+}
+
+
 function deleteReccursiveDOM(DOM) {
-    if(Array.isArray(DOM)) {
+    if (Array.isArray(DOM)) {
         DOM.forEach(function (element) {
-            for(let name in element) {
-                if(element[name].hasOwnProperty('DOM')) {
+            for (let name in element) {
+                if (element[name].hasOwnProperty('DOM')) {
                     element[name].DOM.remove();
                 }
             }

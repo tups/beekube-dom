@@ -64,3 +64,6 @@ typings/
 
 ### JetBrains
 /.idea
+/webpack.config.js
+/js/
+/test/
