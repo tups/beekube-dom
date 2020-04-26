@@ -414,12 +414,10 @@ function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, p
         case TYPE_COMPONENT:
 
             if (REMOVE_OLD) {
-                console.log('removeComponent', oldValue, value, typeDiff, name, typeIndex, element, parentTemplate, lastPathCurrentRight, componentindex);
                 deleteChildElement(componentindex, element);
             }
             // Création du nouvelle élément
             if (ADD_NEW) {
-                console.log('addComponent', oldValue, value, typeDiff, name, typeIndex, element, parentTemplate, lastPathCurrentRight, componentindex);
                 let component = {};
                 component[name] = lastPathCurrentRight;
                 element['children'][componentindex] = new CreateElementDOM([component], elementDOM);
