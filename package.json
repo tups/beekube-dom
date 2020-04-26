@@ -1,6 +1,6 @@
 {
   "name": "beekube-dom",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Helper JavaScript for manipulate DOM and the events",
   "main": "index.js",
   "repository": {
@@ -19,17 +19,7 @@
   ],
   "author": "Damien TUPINIER",
   "license": "MIT",
-  "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-proposal-class-properties": "^7.8.3",
-    "@babel/preset-env": "^7.9.5",
-    "babel-loader": "^8.1.0",
-    "clean-webpack-plugin": "^3.0.0",
-    "cross-env": "^7.0.2",
-    "uglifyjs-webpack-plugin": "^2.2.0",
-    "webpack": "^4.42.1",
-    "webpack-cli": "^3.3.11"
-  },
+  "devDependencies": {},
   "dependencies": {
     "js-struct-compare": "^1.0.0"
   }

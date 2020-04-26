@@ -22,12 +22,16 @@ class Component {
      *
      * @param {external:Node} element
      * @param {object} states
+     * @param index int|null
      */
-    constructor(states, element) {
+    constructor(states, element, index = null) {
 
         this.states = Object.assign(this.states, states);
         this.renderTemplate = this.render();
-        this.DOMModule = new DOMModule(element, this.renderTemplate, this.states);
+        this.DOMModule = new DOMModule({
+            parentNode: element,
+            index: index
+        }, this.renderTemplate, this.states);
     }
 
     getProp(variable, index) {
@@ -41,12 +45,12 @@ class Component {
      *
      * @param value Object
      */
-    set props (value) {
+    set props(value) {
         let cloneStatesModule = cloneObject(this.states);
         Object.assign(cloneStatesModule, value);
 
-        for(let nameProps in cloneStatesModule) {
-            if(cloneStatesModule.hasOwnProperty(nameProps)) {
+        for (let nameProps in cloneStatesModule) {
+            if (cloneStatesModule.hasOwnProperty(nameProps)) {
                 this.DOMModule.variables[nameProps] = cloneStatesModule[nameProps];
             }
         }
@@ -55,21 +59,21 @@ class Component {
         let templateCompare = compare(this.renderTemplate, thisRender);
         this.renderTemplate = thisRender;
 
-        this.DOMModule.render(null, templateCompare);
+        this.DOMModule.render(null, {'compare': templateCompare, 'template': thisRender});
     }
 
-    get props () {
+    get props() {
         return Object.assign({}, this.states);
     }
 
-    render () {
+    render() {
         return [];
     }
 
-    destroy () {
+    destroy() {
 
         // Remove All DOM
-        if(!!this.DOMModule) {
+        if (!!this.DOMModule) {
             this.DOMModule.deleteDOM();
         }
         // Remove current Component

@@ -34,9 +34,10 @@ import {getContentVariable} from "./Helper/String";
         }]
  *
  */
-function CreateElementDOM(dataJson, parentElement, type) {
+function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
     parentElement = typeof parentElement === "undefined" ? null : parentElement;
     type = typeof type === "undefined" ? null : type;
+    indexInsert = typeof indexInsert === "undefined" ? null : indexInsert;
 
     this.event = [];
     this.DOM = [];
@@ -46,7 +47,7 @@ function CreateElementDOM(dataJson, parentElement, type) {
         let thisDOM = {};
 
         if (typeof element === "function") {
-            let thisComponent = new element(parentElement);
+            let thisComponent = new element(parentElement, indexInsert);
             _this.DOM.push(thisComponent);
             return true;
         }
@@ -54,6 +55,15 @@ function CreateElementDOM(dataJson, parentElement, type) {
         for (let typeElement in element) {
             if (element.hasOwnProperty(typeElement)) {
                 let thisType = 'html';
+                let elemJSON = element[typeElement];
+
+                if (typeElement === "Component") {
+                    if(elemJSON.hasOwnProperty('function')) {
+                        let thisComponent = new elemJSON.function(parentElement, indexInsert);
+                        _this.DOM.push(thisComponent);
+                    }
+                    continue;
+                }
 
                 if(type === 'svg') {
                     thisType = type
@@ -76,7 +86,7 @@ function CreateElementDOM(dataJson, parentElement, type) {
                     'DOM': elem
                 };
 
-                let elemJSON = element[typeElement];
+
                 for (let attribute in elemJSON) {
                     if (elemJSON.hasOwnProperty(attribute)) {
                         switch (attribute) {
@@ -112,7 +122,11 @@ function CreateElementDOM(dataJson, parentElement, type) {
                 }
 
                 if (!!parentElement) {
-                    parentElement.appendChild(elem);
+                    if(indexInsert === null || !parentElement.children.hasOwnProperty(indexInsert)) {
+                        parentElement.appendChild(elem);
+                    } else {
+                        parentElement.insertBefore(elem, parentElement.children[indexInsert]);
+                    }
                 }
             }
         }
