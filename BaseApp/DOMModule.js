@@ -164,7 +164,7 @@ function reccursiveAssignVariables(template, templateRender, context, elementPar
                                         attributeTemplate,
                                         variableNames,
                                         context,
-                                        element === null ? element : element.children,
+                                        !element ? null : element.children,
                                     );
                                     break;
                                 default:
@@ -265,7 +265,7 @@ DOMModule.prototype.render = function (context = null, templateCompare = null) {
     context = context === null ? this : context;
 
     if (templateCompare !== null) {
-        if(templateCompare.hasOwnProperty('compare') && templateCompare.hasOwnProperty('template')) {
+        if (templateCompare.hasOwnProperty('compare') && templateCompare.hasOwnProperty('template')) {
             updateTemplate(context, templateCompare.compare, templateCompare.template);
             this.getTemplateVariables(); // Mise à jour des données sur les variables
         }
@@ -278,6 +278,15 @@ DOMModule.prototype.render = function (context = null, templateCompare = null) {
 
 };
 
+
+function filterDeleted(value) {
+    return value.get_type() === Difference.TYPE_DELETED;
+}
+
+function filterOther(value) {
+    return value.get_type() !== Difference.TYPE_DELETED;
+}
+
 /**
  *
  * @param context
@@ -286,7 +295,11 @@ DOMModule.prototype.render = function (context = null, templateCompare = null) {
  */
 function updateTemplate(context, diffenrenceList, template) {
 
-    for (let diff in diffenrenceList) {
+    let deleted = diffenrenceList.filter(filterDeleted);
+    let others = diffenrenceList.filter(filterOther);
+
+    let list = deleted.concat(others);
+    for (let diff in list) {
         if (diffenrenceList.hasOwnProperty(diff) && diffenrenceList[diff] instanceof Difference) {
             editTemplate(context, diffenrenceList[diff], template);
         }
@@ -328,9 +341,14 @@ function incrementeType(type, key) {
         case TYPE_ATTRIBUTE:
             if (key === 'children') {
                 return TYPE_NODELIST;
-            } else {
-                return TYPE_ATTRIBUTE_LIST
             }
+
+            if (key === 'class') {
+                return TYPE_ATTRIBUTE_LIST;
+            }
+
+            return TYPE_ATTRIBUTE;
+
         case TYPE_ATTRIBUTE_LIST:
             return TYPE_ATTRIBUTE_LIST;
         case TYPE_COMPONENT:
@@ -351,15 +369,26 @@ function deleteChildElement(name, element) {
                             child[elementName].DOM.remove();
                         }
                     }
-
                 }
             });
         }
-
     } else {
-        if (element['children'][name].hasOwnProperty('DOM')) {
-            element['children'][name].DOM.remove();
+        if(typeof name === "string") {
+            element.DOM.remove();
+        } else {
+            if (!element['children'][name].hasOwnProperty('DOM')) {
+                for (let elementName in element['children'][name]) {
+                    if(element['children'][name].hasOwnProperty(elementName)) {
+                        if (element['children'][name][elementName].hasOwnProperty('DOM')) {
+                            element['children'][name][elementName].DOM.remove();
+                        }
+                    }
+                }
+            } else {
+                element['children'][name].DOM.remove();
+            }
         }
+
     }
 }
 
@@ -418,9 +447,14 @@ function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, p
             }
             // Création du nouvelle élément
             if (ADD_NEW) {
-                let component = {};
-                component[name] = lastPathCurrentRight;
-                element['children'][componentindex] = new CreateElementDOM([component], elementDOM);
+                let component = null;
+                if (lastPathCurrentRight.hasOwnProperty('Component')) {
+                    component = lastPathCurrentRight;
+                } else {
+                    component = {'Component': lastPathCurrentRight};
+                }
+
+                element['children'][componentindex] = new CreateElementDOM([component], elementDOM, null, componentindex);
             }
 
             break;
@@ -504,7 +538,7 @@ function updateValue(context, paths, right_value, left_value, typeDiff, template
         last = (i + 1) === paths.length;
         typeIndex = incrementeType(typeIndex, paths[i]);
 
-        let pathUpdate = (typeIndex === TYPE_ATTRIBUTE_LIST || typeIndex === TYPE_COMPONENT ? lastPath : paths[i]);
+        let pathUpdate = ( (typeIndex === TYPE_ATTRIBUTE_LIST) || (typeIndex === TYPE_COMPONENT) ? lastPath : paths[i] );
 
         // On récupére l'index si c'est un composant
         if (typeIndex === TYPE_COMPONENT && componentIndex === null) {
@@ -536,6 +570,9 @@ function updateValue(context, paths, right_value, left_value, typeDiff, template
 
             if (last) {
                 if (typeDiff === Difference.TYPE_DELETED) {
+                    if(typeIndex === TYPE_ATTRIBUTE) {
+                        typeIndex = TYPE_ELEMENT;
+                    }
                     updateValueInDOM(left_value, right_value, typeDiff, pathUpdate, typeIndex, currentElement, lastPathCurrent, lastPathCurrentRight, componentIndex);
                 } else {
                     updateValueInDOM(left_value, right_value, typeDiff, pathUpdate, typeIndex, currentElement, lastPathCurrent, lastPathCurrentRight, componentIndex);
