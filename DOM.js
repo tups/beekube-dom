@@ -58,25 +58,25 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                 let elemJSON = element[typeElement];
 
                 if (typeElement === "Component") {
-                    if(elemJSON.hasOwnProperty('function')) {
+                    if (elemJSON.hasOwnProperty('function')) {
                         let thisComponent = new elemJSON.function(parentElement, indexInsert);
                         _this.DOM.push(thisComponent);
                     }
                     continue;
                 }
 
-                if(type === 'svg') {
+                if (type === 'svg') {
                     thisType = type
                 } else {
-                    if(typeElement === 'svg') {
+                    if (typeElement === 'svg') {
                         thisType = typeElement;
                     } else {
                         thisType = 'html';
                     }
                 }
                 let elem;
-                if(thisType === 'svg') {
-                    elem = document. createElementNS("http://www.w3.org/2000/svg", typeElement);
+                if (thisType === 'svg') {
+                    elem = document.createElementNS("http://www.w3.org/2000/svg", typeElement);
                 } else {
                     elem = document.createElement(typeElement);
                 }
@@ -102,15 +102,19 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                                 elem.innerHTML = elemJSON[attribute];
                                 break;
                             case 'class':
-                                if(typeof elemJSON[attribute] === "object") {
-                                    for (let thisClass in elemJSON[attribute]) {
-                                        if(!!elemJSON[attribute][thisClass]) {
-                                            elem.classList.add(elemJSON[attribute][thisClass]);
-                                        }
-                                    }
+                                let classes = [];
+                                if (typeof elemJSON[attribute] === "object") {
+                                    classes = elemJSON[attribute]
                                 } else {
-                                    elem.classList.add(elemJSON[attribute]);
+                                    classes = elemJSON[attribute].split(' ');
                                 }
+
+                                for (let thisClass in classes) {
+                                    if (!!classes[thisClass]) {
+                                        elem.classList.add(classes[thisClass]);
+                                    }
+                                }
+
                                 break;
                             default:
                                 _this.event.concat(
@@ -122,7 +126,7 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                 }
 
                 if (!!parentElement) {
-                    if(indexInsert === null || !parentElement.children.hasOwnProperty(indexInsert)) {
+                    if (indexInsert === null || !parentElement.children.hasOwnProperty(indexInsert)) {
                         parentElement.appendChild(elem);
                     } else {
                         parentElement.insertBefore(elem, parentElement.children[indexInsert]);
