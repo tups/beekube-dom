@@ -70,7 +70,13 @@ class Component {
         return [];
     }
 
+    beforeDestroy() {
+
+    }
+
     destroy() {
+
+        this.beforeDestroy();
 
         // Remove All DOM
         if (!!this.DOMModule) {

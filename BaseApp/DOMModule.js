@@ -393,7 +393,7 @@ function deleteChildElement(name, element) {
 }
 
 function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, parentTemplate, lastPathCurrentRight, componentindex) {
-    let elementDOM = element.DOM;
+    let elementDOM = !!element && element.hasOwnProperty('DOM') ? element.DOM : {};
 
     const REMOVE_OLD = typeDiff === Difference.TYPE_DELETED || typeDiff === Difference.TYPE_CHANGED;
     const ADD_NEW = typeDiff === Difference.TYPE_ADDED || typeDiff === Difference.TYPE_CHANGED;
