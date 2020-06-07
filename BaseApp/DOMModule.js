@@ -358,38 +358,47 @@ function incrementeType(type, key) {
 }
 
 function deleteChildElement(name, element) {
-    if (element['children'][name] instanceof CreateElementDOM) {
-        if (element['children'][name].hasOwnProperty('DOM')) {
-            element['children'][name].DOM.forEach(function (child) {
-                if (child instanceof Component) {
-                    child.destroy();
-                } else {
-                    for (let elementName in child) {
-                        if (child.hasOwnProperty(elementName) && child[elementName].hasOwnProperty('DOM')) {
-                            child[elementName].DOM.remove();
-                        }
-                    }
-                }
-            });
-        }
-    } else {
-        if(typeof name === "string") {
-            element.DOM.remove();
-        } else {
-            if (!element['children'][name].hasOwnProperty('DOM')) {
-                for (let elementName in element['children'][name]) {
-                    if(element['children'][name].hasOwnProperty(elementName)) {
-                        if (element['children'][name][elementName].hasOwnProperty('DOM')) {
-                            element['children'][name][elementName].DOM.remove();
-                        }
-                    }
-                }
-            } else {
-                element['children'][name].DOM.remove();
-            }
-        }
 
+    switch (true) {
+        // Composant
+        case element['children'][name] instanceof Component:
+            element['children'][name].destroy();
+            break;
+        // Create DOM Element
+        case element['children'][name] instanceof CreateElementDOM:
+            if (element['children'][name].hasOwnProperty('DOM')) {
+                element['children'][name].DOM.forEach(function (child) {
+                    if (child instanceof Component) {
+                        child.destroy();
+                    } else {
+                        for (let elementName in child) {
+                            if (child.hasOwnProperty(elementName) && child[elementName].hasOwnProperty('DOM')) {
+                                child[elementName].DOM.remove();
+                            }
+                        }
+                    }
+                });
+            }
+            break;
+        // String
+        case typeof name === "string":
+            element.DOM.remove();
+            break;
+        // DOM
+        case !element['children'][name].hasOwnProperty('DOM'):
+            for (let elementName in element['children'][name]) {
+                if(element['children'][name].hasOwnProperty(elementName)) {
+                    if (element['children'][name][elementName].hasOwnProperty('DOM')) {
+                        element['children'][name][elementName].DOM.remove();
+                    }
+                }
+            }
+            break;
+        default:
+            element['children'][name].DOM.remove();
+            break;
     }
+
 }
 
 function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, parentTemplate, lastPathCurrentRight, componentindex) {
