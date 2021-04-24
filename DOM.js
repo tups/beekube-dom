@@ -149,6 +149,17 @@ CreateElementDOM.prototype.removeEvent = function () {
 };
 
 const regexAttributeNamespace = /([^:]*):([^:]*)/;
+
+const namespaceLink = {
+    'xlink' : "http://www.w3.org/1999/xlink"
+}
+function nameSpaceXmlLink(namespace) {
+    if(namespaceLink.hasOwnProperty(namespace)) {
+        return namespaceLink[namespace];
+    } else {
+        return namespace;
+    }
+}
 /**
  * SetAttribute element and return event
  * @param element
@@ -165,7 +176,7 @@ function setAttribute(element, attributeName, attributeValue) {
         case 'string':
             let withNamespace = regexAttributeNamespace.exec(attributeName);
             if(withNamespace) {
-                element.setAttributeNS(withNamespace[1],  withNamespace[2], attributeValue);
+                element.setAttributeNS(nameSpaceXmlLink(withNamespace[1]),  withNamespace[2], attributeValue);
             } else {
                 element.setAttribute(attributeName, attributeValue);
             }
