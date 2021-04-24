@@ -15,7 +15,7 @@ import compare from "js-struct-compare";
  *
  */
 class Component {
-    DOMModule;
+    DOMModule = null;
     states = {};
 
     /**

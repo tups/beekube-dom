@@ -148,6 +148,7 @@ CreateElementDOM.prototype.removeEvent = function () {
     });
 };
 
+const regexAttributeNamespace = /([^:]*):([^:]*)/;
 /**
  * SetAttribute element and return event
  * @param element
@@ -162,7 +163,13 @@ function setAttribute(element, attributeName, attributeValue) {
     switch (typeof attributeValue) {
 
         case 'string':
-            element.setAttribute(attributeName, attributeValue);
+            let withNamespace = regexAttributeNamespace.exec(attributeName);
+            if(withNamespace) {
+                element.setAttributeNS(withNamespace[1],  withNamespace[2], attributeValue);
+            } else {
+                element.setAttribute(attributeName, attributeValue);
+            }
+
             break;
 
         case 'function':
