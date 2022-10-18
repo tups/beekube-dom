@@ -244,6 +244,9 @@ function setVariable(element, attributeName, attributeValue, variablesName, cont
             case 'textContent':
                 element.textContent = getContentVariable(value);
                 break;
+            case 'value':
+                element.value = getContentVariable(value);
+                break;
             default:
                 element.setAttribute(attributeName, value);
                 if (element.hasAttribute(attributeName) && typeof element.hasAttribute(attributeName) === 'string') {
