@@ -38,33 +38,35 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
     parentElement = typeof parentElement === "undefined" ? null : parentElement;
     type = typeof type === "undefined" ? null : type;
     indexInsert = typeof indexInsert === "undefined" ? null : indexInsert;
-
+    
     this.event = [];
-    this.DOM = [];
-
+    this.DOM = {};
+    
     let _this = this;
-    dataJson.forEach(function (element) {
+    
+    for(const key in dataJson) {
+        let element = dataJson[key];
         let thisDOM = {};
-
+        
         if (typeof element === "function") {
-            let thisComponent = new element(parentElement, indexInsert);
-            _this.DOM.push(thisComponent);
+            _this.DOM[key] = new element(parentElement, indexInsert);
             return true;
         }
-
-        for (let typeElement in element) {
-            if (element.hasOwnProperty(typeElement)) {
+        
+        for (let typeElementKey in element) {
+            if (element.hasOwnProperty(typeElementKey)) {
                 let thisType = 'html';
-                let elemJSON = element[typeElement];
-
+                let elemJSON = element[typeElementKey];
+                
+                const typeElement = !elemJSON.hasOwnProperty('typeElement') ? typeElementKey : elemJSON.typeElement;
+                
                 if (typeElement === "Component") {
                     if (elemJSON.hasOwnProperty('function')) {
-                        let thisComponent = new elemJSON.function(parentElement, indexInsert);
-                        _this.DOM.push(thisComponent);
+                        _this.DOM[key] = new elemJSON.function(parentElement, indexInsert);
                     }
                     continue;
                 }
-
+                
                 if (type === 'svg') {
                     thisType = type
                 } else {
@@ -80,20 +82,20 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                 } else {
                     elem = document.createElement(typeElement);
                 }
-
-
-                thisDOM[typeElement] = {
+                
+                
+                thisDOM[typeElementKey] = {
                     'DOM': elem
                 };
-
-
+                
+                
                 for (let attribute in elemJSON) {
                     if (elemJSON.hasOwnProperty(attribute)) {
                         switch (attribute) {
                             case 'children':
                                 let children = new CreateElementDOM(elemJSON[attribute], elem, thisType);
                                 _this.event.concat(children.event);
-                                thisDOM[typeElement]['children'] = children.DOM;
+                                thisDOM[typeElementKey]['children'] = children.DOM;
                                 break;
                             case 'textContent':
                                 elem.textContent = getContentVariable(elemJSON[attribute]);
@@ -108,23 +110,23 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                                 } else {
                                     classes = elemJSON[attribute].split(' ');
                                 }
-
+                                
                                 for (let thisClass in classes) {
                                     if (!!classes[thisClass]) {
                                         elem.classList.add(classes[thisClass]);
                                     }
                                 }
-
+                                
                                 break;
                             default:
                                 _this.event.concat(
-                                    setAttribute(elem, attribute, elemJSON[attribute])
+                                  setAttribute(elem, attribute, elemJSON[attribute])
                                 );
                                 break;
                         }
                     }
                 }
-
+                
                 if (!!parentElement) {
                     if (indexInsert === null || !parentElement.children.hasOwnProperty(indexInsert)) {
                         parentElement.appendChild(elem);
@@ -132,11 +134,11 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                         parentElement.insertBefore(elem, parentElement.children[indexInsert]);
                     }
                 }
+                
+                _this.DOM[key] = thisDOM;
             }
         }
-
-        _this.DOM.push(thisDOM);
-    });
+    }
 }
 
 CreateElementDOM.prototype.removeEvent = function () {
@@ -168,11 +170,11 @@ function nameSpaceXmlLink(namespace) {
  * @returns {Array}
  */
 function setAttribute(element, attributeName, attributeValue) {
-
+    
     let event = [];
-
+    
     switch (typeof attributeValue) {
-
+        
         case 'string':
             let withNamespace = regexAttributeNamespace.exec(attributeName);
             if(withNamespace) {
@@ -180,38 +182,38 @@ function setAttribute(element, attributeName, attributeValue) {
             } else {
                 element.setAttribute(attributeName, attributeValue);
             }
-
+            
             break;
-
+        
         case 'function':
             element.addEventListener(attributeName, attributeValue, false);
             break;
-
+        
         case 'object':
             let listener = attributeValue.hasOwnProperty('listener') ? attributeValue.listener : function () {
             };
             let useCapture = attributeValue.hasOwnProperty('useCapture') ? attributeValue.useCapture : null;
             let options = false;
-
+            
             if (useCapture === null) {
                 options = attributeValue.hasOwnProperty('options') ? attributeValue.options : false;
             }
-
+            
             element.addEventListener(attributeName, listener, options);
-
+            
             event.push({
                 'element': element,
                 'type': attributeName,
                 'listener': listener,
                 'options': options
             });
-
+            
             break;
-
+        
         default:
             break;
     }
-
+    
     return event;
 }
 

@@ -1,3 +1,4 @@
+import Component from "../BaseApp/Component";
 
 function isObject(obj) {
     let type = typeof obj;
@@ -9,6 +10,8 @@ function cloneObject(src) {
 
     // On retourne directement la fonction
     if(typeof src === "function") return src;
+    if(src instanceof Element) return src;
+    if(src instanceof Component) return src;
 
     for (let prop in src) {
         if (src.hasOwnProperty(prop)) {
