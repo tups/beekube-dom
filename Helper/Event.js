@@ -46,11 +46,11 @@ function configureEvent(status, eventObject) {
             });
 
             break;
-
         case eventObject.element instanceof Node:
-
             dispatchTypeEvent(status, eventObject);
-
+            break;
+        default:
+            dispatchTypeEvent(status, eventObject);
             break;
     }
 
@@ -59,9 +59,41 @@ function configureEvent(status, eventObject) {
     return true;
 }
 
-function fireEvent(obj, evts) {
-    var t, evt;
 
+const matchEventType = {
+    'FocusEvent': ['focus', 'blur', 'focusin', 'focusout'],
+    'MouseEvent': ['click', 'dblclick', 'mouseup', 'mousedown'],
+    'TouchEvent': ['touchstart', 'touchend', 'touchmove', 'touchcancel'],
+    'KeyboardEvent': ['keydown', 'keypress', 'keyup'],
+};
+
+const matchEventObject = {
+    'FocusEvent': typeof FocusEvent === "undefined" ? Event : FocusEvent,
+    'MouseEvent':  typeof MouseEvent === "undefined" ? Event : MouseEvent,
+    'TouchEvent':  typeof TouchEvent === "undefined" ? Event : TouchEvent,
+    'KeyboardEvent': typeof KeyboardEvent === "undefined" ? Event : KeyboardEvent,
+}
+
+function getEventObject(eventName) {
+    for( let event in matchEventType ) {
+        
+        if(matchEventType[event].indexOf(eventName) !== -1) {
+            return matchEventObject[event];
+        }
+    }
+    return Event;
+}
+
+/**
+ *
+ * @param obj
+ * @param evts
+ * @param {(boolean|{})} data
+ * @returns {boolean}
+ */
+function fireEvent(obj, evts, data = false) {
+    var t, evt;
+    
     if (obj === null || typeof obj === "undefined") {
         return false;
     }
@@ -73,8 +105,13 @@ function fireEvent(obj, evts) {
     while (t--) {
         evt = evts[t];
         if (typeof Event === 'function' || !document.fireEvent) {
-            var event = document.createEvent('HTMLEvents');
-            event.initEvent(evt, true, true);
+            var eventClass = getEventObject(evt, {"bubbles":true, "cancelable":false});
+            var event = new eventClass(evt, {"bubbles":true, "cancelable":false});
+            
+            if(data) {
+                Object.assign(event, data);
+            }
+            
             obj.dispatchEvent(event);
         } else {
             obj.fireEvent('on' + evt);
