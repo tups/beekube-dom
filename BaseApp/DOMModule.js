@@ -517,7 +517,8 @@ function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, p
       if (ADD_NEW) {
         let DOMJSON = {};
         DOMJSON[name] = value;
-        element[name] = new CreateElementDOM(DOMJSON, elementDOM);
+        const newElement = new CreateElementDOM(DOMJSON, elementDOM);
+        element[name] = newElement.DOM[name];
       }
       
       break;
@@ -689,7 +690,7 @@ function reccursiveUpdateValuePath(contextTemplate, template, currentDOM, paths,
 
 function updateValue(context, paths, right_value, left_value, typeDiff, template) {
   
-  const data = reccursiveUpdateValuePath(context.template, template, context.DOMElement.DOM, paths, right_value, left_value, TYPE_NODELIST, typeDiff);
+  const data = reccursiveUpdateValuePath(context.template, template, context.DOMElement.DOM, paths, right_value, left_value, TYPE_NODELIST, typeDiff, context.parentNode);
   
   context.template = data.contextTemplate;
   context.DOMElement.DOM = data.DOM;
