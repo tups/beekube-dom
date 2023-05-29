@@ -1,6 +1,6 @@
 {
   "name": "beekube-dom",
-  "version": "0.0.17",
+  "version": "0.0.19",
   "description": "Helper JavaScript for manipulate DOM and the events",
   "main": "index.js",
   "repository": {
