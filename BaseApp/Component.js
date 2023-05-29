@@ -86,6 +86,10 @@ class Component {
         delete this;
     }
     
+    setProps(states) {
+        this.props = states;
+    }
+    
 }
 
 export default Component;
