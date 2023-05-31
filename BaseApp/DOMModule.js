@@ -481,12 +481,18 @@ function deleteChildElement(name, element) {
 function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, parentElement, lastPathCurrentRight) {
   let elementDOM = !!element && element.hasOwnProperty('DOM') ? element.DOM : parentElement;
   
-  let thisElement = !!element && element.hasOwnProperty(name) ? element[name] : element;
-  // if (elementDOM === null) {
-  //   for (const nameDOM in element) {
-  //     elementDOM = element[nameDOM].DOM;
-  //   }
-  // }
+  let thisElement;
+  switch (true) {
+    case !!element && element.hasOwnProperty(name):
+      thisElement = element[name];
+      break;
+    case !!element && elementDOM.hasOwnProperty(name):
+      thisElement = elementDOM[name];
+      break;
+    default:
+      thisElement = element;
+      break;
+  }
   
   
   const REMOVE_OLD = typeDiff === Difference.TYPE_DELETED || typeDiff === Difference.TYPE_CHANGED;
@@ -539,7 +545,12 @@ function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, p
     case TYPE_COMPONENT:
       
       if(name === 'states') {
-        element.setProps(value);
+        if(element.hasOwnProperty('DOM')) {
+          elementDOM.setProps(value);
+        } else {
+          element.setProps(value);
+        }
+        
       } else {
         if (REMOVE_OLD) {
           deleteChildElement(name, thisElement);
@@ -627,6 +638,7 @@ function reccursiveUpdateValuePath(contextTemplate, template, currentDOM, paths,
   let last = paths.length === 1;
   const currentPath = paths.slice();
   const keypath = currentPath.shift();
+  
   switch (true) {
     case keypath === 'class':
     case typeIndex === TYPE_COMPONENT && contextTemplate.hasOwnProperty('states'):
@@ -696,10 +708,20 @@ function reccursiveUpdateValuePath(contextTemplate, template, currentDOM, paths,
       
     } else {
       
-      if (DOM.hasOwnProperty(keypath)) {
-        currentDOM = DOM[keypath];
+      switch (true) {
+        case DOM.hasOwnProperty(keypath):
+          currentDOM = DOM[keypath];
+          break;
+        case keypath === "Component" && currentDOM.hasOwnProperty('DOM'):
+          //currentDOM = currentParentElement;
+          for(const componentKey in currentDOM.DOM) {
+            currentDOM = currentDOM.DOM[componentKey];
+          }
+          
+          break;
       }
-      const dataChild = reccursiveUpdateValuePath(currentContextTemplate[keypath], currentTemplate[keypath], currentDOM, currentPath, right_value, left_value, typeIndex, typeDiff, currentParentElement, lastKey);
+      
+      const dataChild = reccursiveUpdateValuePath(currentContextTemplate[keypath], currentTemplate[keypath], currentDOM, currentPath, right_value, left_value, typeIndex, typeDiff, currentParentElement, keypath);
       DOM[keypath] = dataChild.DOM;
       currentContextTemplate[keypath] = dataChild.contextTemplate;
       currentTemplate[keypath] = dataChild.template;
