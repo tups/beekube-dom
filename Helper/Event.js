@@ -76,7 +76,7 @@ const matchEventObject = {
 
 function getEventObject(eventName) {
     for( let event in matchEventType ) {
-        
+
         if(matchEventType[event].indexOf(eventName) !== -1) {
             return matchEventObject[event];
         }
@@ -85,15 +85,15 @@ function getEventObject(eventName) {
 }
 
 /**
- *
  * @param obj
  * @param evts
- * @param {(boolean|{})} data
+ * @param data
+ * @param options
  * @returns {boolean}
  */
-function fireEvent(obj, evts, data = false) {
+function fireEvent(obj, evts, data = false, options = {"bubbles":true, "cancelable":true}) {
     var t, evt;
-    
+
     if (obj === null || typeof obj === "undefined") {
         return false;
     }
@@ -105,13 +105,13 @@ function fireEvent(obj, evts, data = false) {
     while (t--) {
         evt = evts[t];
         if (typeof Event === 'function' || !document.fireEvent) {
-            var eventClass = getEventObject(evt, {"bubbles":true, "cancelable":false});
-            var event = new eventClass(evt, {"bubbles":true, "cancelable":false});
-            
+            var eventClass = getEventObject(evt, options);
+            var event = new eventClass(evt, options);
+
             if(data) {
                 Object.assign(event, data);
             }
-            
+
             obj.dispatchEvent(event);
         } else {
             obj.fireEvent('on' + evt);
