@@ -62,7 +62,12 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                 
                 if (typeElement === "Component") {
                     if (elemJSON.hasOwnProperty('function')) {
-                        _this.DOM[key] = new elemJSON.function(parentElement, indexInsert);
+                        if(elemJSON.hasOwnProperty('states')) {
+                            _this.DOM[key] = new elemJSON.function(elemJSON.states, parentElement, indexInsert);
+                        } else {
+                            _this.DOM[key] = new elemJSON.function(parentElement, indexInsert);
+                        }
+                        
                     }
                     continue;
                 }
