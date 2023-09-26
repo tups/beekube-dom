@@ -30,7 +30,7 @@ function configureEvent(status, eventObject) {
 
     switch(true) {
 
-        case eventObject.element instanceof NodeList:
+        case eventObject.element instanceof eventObject.context.NodeList:
         case eventObject.element instanceof Array:
 
             let elements = Array.from(eventObject.element);
@@ -46,7 +46,7 @@ function configureEvent(status, eventObject) {
             });
 
             break;
-        case eventObject.element instanceof Node:
+        case eventObject.element instanceof eventObject.context.Element:
             dispatchTypeEvent(status, eventObject);
             break;
         default:
@@ -148,7 +148,8 @@ const defaultEventOptions = {
     'element': null,
     'type': 'click',
     'listener': function () {},
-    'options': false
+    'options': false,
+    'context': window
 };
 
 const HelperEvent = {
