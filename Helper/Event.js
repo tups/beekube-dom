@@ -23,7 +23,9 @@ function dispatchTypeEvent(status, eventObject) {
  *
  */
 function configureEvent(status, eventObject) {
-
+    
+    eventObject = Object.assign({}, defaultEventOptions, eventObject);
+    
     if (eventObject.element === null) {
         return false;
     }
