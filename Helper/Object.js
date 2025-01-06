@@ -10,7 +10,9 @@ function cloneObject(src) {
 
     // On retourne directement la fonction
     if(typeof src === "function") return src;
-    if(src instanceof Element) return src;
+
+    if (src instanceof window.Element || (src.ownerDocument && src instanceof src.ownerDocument.defaultView.Element)) return src;
+
     if(src instanceof Component) return src;
 
     for (let prop in src) {
