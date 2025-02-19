@@ -38,28 +38,28 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
     parentElement = typeof parentElement === "undefined" ? null : parentElement;
     type = typeof type === "undefined" ? null : type;
     indexInsert = typeof indexInsert === "undefined" ? null : indexInsert;
-    
+
     this.event = [];
     this.DOM = {};
-    
+
     let _this = this;
-    
+
     for(const key in dataJson) {
         let element = dataJson[key];
         let thisDOM = {};
-        
+
         if (typeof element === "function") {
             _this.DOM[key] = new element(parentElement, indexInsert);
             return true;
         }
-        
+
         for (let typeElementKey in element) {
             if (element.hasOwnProperty(typeElementKey)) {
                 let thisType = 'html';
                 let elemJSON = element[typeElementKey];
-                
+
                 const typeElement = !elemJSON.hasOwnProperty('typeElement') ? typeElementKey : elemJSON.typeElement;
-                
+
                 if (typeElement === "Component") {
                     if (elemJSON.hasOwnProperty('function')) {
                         if(elemJSON.hasOwnProperty('states')) {
@@ -67,11 +67,11 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                         } else {
                             _this.DOM[key] = new elemJSON.function(parentElement, indexInsert);
                         }
-                        
+
                     }
                     continue;
                 }
-                
+
                 if (type === 'svg') {
                     thisType = type
                 } else {
@@ -87,13 +87,13 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                 } else {
                     elem = document.createElement(typeElement);
                 }
-                
-                
+
+
                 thisDOM[typeElementKey] = {
                     'DOM': elem
                 };
-                
-                
+
+
                 for (let attribute in elemJSON) {
                     if (elemJSON.hasOwnProperty(attribute)) {
                         switch (attribute) {
@@ -115,13 +115,13 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                                 } else {
                                     classes = elemJSON[attribute].split(' ');
                                 }
-                                
+
                                 for (let thisClass in classes) {
                                     if (!!classes[thisClass]) {
                                         elem.classList.add(classes[thisClass]);
                                     }
                                 }
-                                
+
                                 break;
                             default:
                                 _this.event.concat(
@@ -131,7 +131,7 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                         }
                     }
                 }
-                
+
                 if (!!parentElement) {
                     if (indexInsert === null || !parentElement.children.hasOwnProperty(indexInsert)) {
                         parentElement.appendChild(elem);
@@ -139,7 +139,7 @@ function CreateElementDOM(dataJson, parentElement, type, indexInsert) {
                         parentElement.insertBefore(elem, parentElement.children[indexInsert]);
                     }
                 }
-                
+
                 _this.DOM[key] = thisDOM;
             }
         }
@@ -175,50 +175,51 @@ function nameSpaceXmlLink(namespace) {
  * @returns {Array}
  */
 function setAttribute(element, attributeName, attributeValue) {
-    
+
     let event = [];
-    
+
     switch (typeof attributeValue) {
-        
+
         case 'string':
+        case 'number':
             let withNamespace = regexAttributeNamespace.exec(attributeName);
             if(withNamespace) {
                 element.setAttributeNS(nameSpaceXmlLink(withNamespace[1]),  withNamespace[2], attributeValue);
             } else {
                 element.setAttribute(attributeName, attributeValue);
             }
-            
+
             break;
-        
+
         case 'function':
             element.addEventListener(attributeName, attributeValue, false);
             break;
-        
+
         case 'object':
             let listener = attributeValue.hasOwnProperty('listener') ? attributeValue.listener : function () {
             };
             let useCapture = attributeValue.hasOwnProperty('useCapture') ? attributeValue.useCapture : null;
             let options = false;
-            
+
             if (useCapture === null) {
                 options = attributeValue.hasOwnProperty('options') ? attributeValue.options : false;
             }
-            
+
             element.addEventListener(attributeName, listener, options);
-            
+
             event.push({
                 'element': element,
                 'type': attributeName,
                 'listener': listener,
                 'options': options
             });
-            
+
             break;
-        
+
         default:
             break;
     }
-    
+
     return event;
 }
 
