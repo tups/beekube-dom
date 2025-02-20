@@ -592,10 +592,14 @@ function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, p
           switch (name) {
             case 'class':
               if (REMOVE_OLD) {
-                elementDOM.classList.remove(...oldValue.split(' '));
+                if (oldValue !== '') {
+                  elementDOM.classList.remove(...oldValue.split(' '));
+                }
               }
               if (ADD_NEW) {
-                elementDOM.classList.add(...value.split(' '));
+                if (value !== '') {
+                  elementDOM.classList.add(...value.split(' '));
+                }
               }
               break;
             case 'textContent':
@@ -630,10 +634,14 @@ function updateValueInDOM(oldValue, value, typeDiff, name, typeIndex, element, p
       switch (name) {
         case 'class':
           if (REMOVE_OLD) {
-            elementDOM.classList.remove(...oldValue.split(' '));
+            if (oldValue !== '') {
+              elementDOM.classList.remove(...oldValue.split(' '));
+            }
           }
           if (ADD_NEW) {
-            elementDOM.classList.add(...value.split(' '));
+            if (value !== '') {
+              elementDOM.classList.add(...value.split(' '));
+            }
           }
           break;
         default:
