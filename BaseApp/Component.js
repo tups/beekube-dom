@@ -28,10 +28,15 @@ class Component {
 
         this.states = Object.assign(this.states, states);
         this.renderTemplate = getAssignKeyTemplate(this.render());
+
+        this.beforeMount();
+
         this.DOMModule = new DOMModule({
             parentNode: element,
             index: index
         }, this.renderTemplate, this.states);
+
+        this.afterMount();
     }
 
     getProp(variable, index) {
@@ -79,6 +84,14 @@ class Component {
     }
 
     afterRender() {
+
+    }
+
+    beforeMount() {
+
+    }
+
+    afterMount() {
 
     }
 
