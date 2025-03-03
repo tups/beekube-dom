@@ -23,9 +23,9 @@ function dispatchTypeEvent(status, eventObject) {
  *
  */
 function configureEvent(status, eventObject) {
-    
+
     eventObject = Object.assign({}, defaultEventOptions, eventObject);
-    
+
     if (eventObject.element === null) {
         return false;
     }
@@ -86,6 +86,7 @@ function getEventObject(eventName) {
     return Event;
 }
 
+
 /**
  * @param obj
  * @param evts
@@ -93,7 +94,7 @@ function getEventObject(eventName) {
  * @param options
  * @returns {boolean}
  */
-function fireEvent(obj, evts, data = false, options = {"bubbles":true, "cancelable":true}) {
+function fireEventElement(obj, evts, data = false, options = {"bubbles":true, "cancelable":true}) {
     var t, evt;
 
     if (obj === null || typeof obj === "undefined") {
@@ -119,6 +120,28 @@ function fireEvent(obj, evts, data = false, options = {"bubbles":true, "cancelab
             obj.fireEvent('on' + evt);
         }
     }
+}
+
+/**
+ * @param objs
+ * @param evts
+ * @param data
+ * @param options
+ * @returns {boolean}
+ */
+function fireEvent(objs, evts, data = false, options = {"bubbles":true, "cancelable":true}) {
+
+
+    if (objs === null || typeof objs === "undefined") {
+        return false;
+    }
+
+    objs = objs instanceof NodeList || Array.isArray(objs) ? Array.from(objs) : [objs];
+    objs.forEach(obj => {
+        fireEventElement(obj, evts, data, options);
+    });
+
+    return true;
 }
 
 //Returns true if it is a DOM element
